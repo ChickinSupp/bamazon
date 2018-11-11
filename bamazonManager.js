@@ -16,7 +16,7 @@ connection.connect(err => {
 
 const start = () => {
   console.log(
-    'WELCOME TO BAMAZON \n***MANAGER VIEW***\n_________________________________________________\n'
+    'Welcom To Bamazon \n***MANAGER VIEW***\n_________________________________________________\n'
   );
   inquirer
     .prompt({
@@ -69,7 +69,7 @@ const viewLowInv = () => {
   connection.query('SELECT * FROM products WHERE stock_quantity < 5', (err,res) => {
     if (res.length < 1) {
       console.log(
-        '\nTHERE'S CURRENTLY NO PRODUCTS UNDER THIS CRITERIA\n_________________________________________________\n'
+        '\nTHERE\'S CURRENTLY NO PRODUCTS UNDER THIS CRITERIA\n_________________________________________________\n'
       );
     } else {
       console.log('\n');
