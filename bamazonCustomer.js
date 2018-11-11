@@ -11,77 +11,79 @@ const connection = mysql.createConnection({
 
 connection.connect(err => {
     if (err) throw err;
-    startMenu();
+    start();
 });
 
-const startMenu = () => {
-    connection.query('SELECT * FROM products', (err,res) => {
-        if (err) throw err;
-        if (res.length > 0) {
-            console.log('Welcome to Bamazon! \n' + '______________________________________ \n');
-            console.log('Here are our products... \n' + '______________________________________ \n');
-            for (let i=0; i<res.length; i++) {
-                console.log(`Item ID: ${res[i].item_id} || Name: ${res[i].product_name} || Price: ${res[i].price} || In stock: ${res[i].stock_quantity}`);
+const start = () => {
+    connection.query('SELECT * FROM products', (err, results) => {
+        inquirer.prompt([{
+                name: 'choice',
+                type: 'list',
+                message: 'Welcome to BAMAZON \n Which of following items do you want to buy?',
+                choices: () => {
+                    let products = [];
+                    for (let i = 0; i < results.length; i++) {
+                        products.push(results[i].product_name);
+                    }
+                    return products;
+                },
+            },
+            {
+                name: 'units',
+                type: 'input',
+                message: 'How many units of the product would you want to purchase?'
+
             }
-            console.log('\n')
-
-            inquirer.prompt([
-                {
-                    name: 'units',
-                    type: 'input',
-                    message: 'How many units would you like to purchase?'
-            }]).then(answer => {
-                let id = parseInt(answer.itemID);
-                let units = parseInt(answer.units);
-
-                if (isNaN(id) || (id > res.length)) {
-                    console.log('Please enter a valid ID number');
-                } else {
-                    console.log('You\'re in');
-                    transaction(id, units);
+        ]).then(answer => {
+            let itemPicked;
+            for (let i = 0; i < results.length; i++) {
+                if (answer.choice === results[i].product_name) {
+                    itemPicked = results[i];
                 }
-            });
-        } else {
-            console.log('Server is down for maintenance. PLease try again later.');
-        }
-    });
-};
+            }
 
-const transaction = (id,units) => {
-    let query = `SELECT product_name,price,stock_quantity, FROM products WHERE item_id = ${id}`;
-    connection.query(query, (err,res) => {
-        if (err) throw err;
-        console.log(res);
+            if (itemPicked.stock_quantity >= parseInt(answer.units)) {
 
-        if (units <= res[0].stock_quantity){
-            let newQuantity = res[0].stock_quantity - units;
-            let orderPrice = res[0].price * units;
-            let product = res[0].product_name;
+                let unitsBought = parseInt(answer.units);
+                let priceOfUnits = (unitsBought * itemPicked.price).toFixed(2);
 
-            connection.query(
-                'UPDATE products SET ? WHERE ?',
-                [
-                    {
-                        stock_quantity: newQuantity
-                    },
-                    {
-                        item_id: id
+
+                let stockLeft = parseInt(itemPicked.stock_quantity - unitsBought);
+
+                connection.query(
+                    'UPDATE products SET ? WHERE ?',
+                    [{
+                            product_sales: priceOfUnits,
+                            stock_quantity: stockLeft
+                        },
+                        {
+                            item_id: itemPicked.item_id
+                        }
+                    ],
+                     error => {
+                        if (error) {
+                            throw err;
+
+                        } else {
+                            console.log(`\nDone!\nThank you for your purchase of ${answer.units} units of ${itemPicked.product_name}.\nYour total cost for this purchase is ${priceOfUnits}\n \n \n`);
+                            setTimeout(function () {
+                                start();
+                            }, 1500);
+                        }
+
+
                     }
-                ],
-                err => {
-                    if (err) {
-                        throw err
-                    } else {
-                        console.log(`\nPurchase Complete!\nThank you for your purchase of ${units} units of ${product}.\nYour total cost for this purchase is $${orderPrice}\n____________________________\n`);
-                        setTimeout(() => {
-                            startMenu();
-                        }, 1500);
-                    }
-                }
-            );
-        } else {
-            console.log('Insufficient quantity! \n Check back later.\n__________________________________________________________________\n');
-            startMenu();
-        }
+                );
+
+            } else {
+                console.log('\nSorry. There are not enough units for your purchase. \n Please try again later or select a different product to purchase.\n \n \n \n');
+                setTimeout(function () {
+                    start();
+                }, 1500);
+
+            }
+
+        })
     });
-};
+
+}
