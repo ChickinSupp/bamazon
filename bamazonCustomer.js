@@ -18,11 +18,10 @@ const startMenu = () => {
     connection.query('SELECT * FROM products', (err,res) => {
         if (err) throw err;
         if (res.length > 0) {
-            console.log(`Welcome to Bamazon! \n 
-            ${______________________________________}`);
-            console.log('Here are our products...');
+            console.log('Welcome to Bamazon! \n' + '______________________________________ \n');
+            console.log('Here are our products... \n' + '______________________________________ \n');
             for (let i=0; i<res.length; i++) {
-                console.log(`Item ID: ${res[i].item_id} || Name: ${res[i].product_name} || Price: ${res[i].price}`);
+                console.log(`Item ID: ${res[i].item_id} || Name: ${res[i].product_name} || Price: ${res[i].price} || In stock: ${res[i].stock_quantity}`);
             }
             console.log('\n')
 
@@ -30,9 +29,9 @@ const startMenu = () => {
                 {
                     name: 'units',
                     type: 'input',
-                    message: 'How many untis would you like to purchase?'
+                    message: 'How many units would you like to purchase?'
             }]).then(answer => {
-                let id = parseInt(answer.ItemID);
+                let id = parseInt(answer.itemID);
                 let units = parseInt(answer.units);
 
                 if (isNaN(id) || (id > res.length)) {
